@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Models (downloaded at runtime)
+models/
+
+# Config with potential secrets
+config.yaml
+config.local.yaml
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Build output (PyInstaller)
+dist/
+build/
+*.spec
+
+# Release package
+SimulTransOverlay-v1.0/
+
+# Reasonix
+.reasonix/
+
+# Project specs
+.trae/
