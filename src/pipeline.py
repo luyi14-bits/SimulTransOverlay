@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
 import numpy as np
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -171,16 +172,10 @@ class MemoryMonitor:
         Returns:
             True if collection was triggered
         """
-        try:
-            import psutil
-            process = psutil.Process()
-            memory_info = process.memory_info()
-            total = process.memory_percent()
-            self.memory_percent = total
-        except ImportError:
-            # Fallback: estimate via gc.get_objects
-            self.memory_percent = 50.0
-            return False
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        total = process.memory_percent()
+        self.memory_percent = total
 
         if self.should_collect():
             return self._collect()

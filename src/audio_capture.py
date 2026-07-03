@@ -5,6 +5,7 @@ Supports optional microphone mixing.
 """
 
 import numpy as np
+import sounddevice as sd
 
 
 class AudioCapture:
@@ -32,15 +33,11 @@ class AudioCapture:
         self._callback = callback
 
     def start(self):
-        """Start audio capture.
-
-        In production, opens a sounddevice InputStream with WASAPI loopback.
-        """
+        """Start audio capture using WASAPI loopback."""
         if self.is_running:
             return
 
         try:
-            import sounddevice as sd
             self._stream = sd.InputStream(
                 samplerate=self.sample_rate,
                 channels=self.channels,
@@ -50,10 +47,6 @@ class AudioCapture:
                 device=None,  # Default loopback device
             )
             self._stream.start()
-        except ImportError:
-            raise ImportError(
-                "sounddevice not installed. Run: pip install sounddevice"
-            )
         except Exception as e:
             raise RuntimeError(f"Failed to start audio capture: {e}")
 

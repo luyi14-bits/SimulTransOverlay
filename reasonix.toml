@@ -1,0 +1,2 @@
+[permissions]
+allow = ["Bash(cd /d/Desktop/同步翻译 && git status 2>&1)", "Bash(cd /d/Desktop/同步翻译 && git init && git config user.email \"simultrans@example.com\" && git config user.name \"SimulTransOverlay\")", "mcp__Github__create_repository"]
