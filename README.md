@@ -1,4 +1,4 @@
-# SimulTransOverlay — 屏幕同传翻译半透明框
+# SimulTransOverlay — 屏幕同传翻译（暂时还有bug，勿用）
 
 > 实时捕获系统音频 → 本地 ASR 语音识别 → 内嵌离线翻译 → 半透明叠加层显示译文
 > **零外部依赖**：无需安装 Python/Ollama/CUDA，双击即用
