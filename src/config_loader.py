@@ -77,7 +77,7 @@ def get_audio_config(config: Dict[str, Any]) -> Dict[str, Any]:
         "sample_rate": 48000,
         "channels": 2,
         "blocksize": 1536,
-        "device_name": "",
+        "device_name": "auto",
         "mic_enabled": False,
         "mic_ratio": 0.3,
     })
