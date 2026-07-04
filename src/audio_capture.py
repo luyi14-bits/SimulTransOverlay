@@ -13,46 +13,54 @@ import sounddevice as sd
 logger = logging.getLogger(__name__)
 
 # Virtual audio device keywords to prioritize (SteelSeries, Voicemeeter, etc.)
+# Ordered by likelihood: Gaming/Media/Stream > Chat/Aux/Mic, then generic keywords
 _VIRTUAL_KEYWORDS = [
-    "sonar", "steelseries", "vb-cable", "voicemeeter",
-    "virtual", "cable", "obs", "audio router",
+    "sonar - gaming", "sonar gaming",
+    "sonar - media", "sonar media",
+    "sonar - stream", "sonar stream",
+    "sonar - chat",
+    "sonar - aux",
+    "sonar",
+    "steelseries",
+    "voicemeeter",
+    "vb-cable",
+    "virtual",
+    "cable output",
+    "obs",
+    "audio router",
 ]
 
 
 def list_loopback_devices() -> list[dict]:
-    """List all WASAPI loopback capture devices.
+    """List all WASAPI output devices for loopback capture.
 
-    WASAPI loopback devices appear as input devices in sounddevice,
-    associated with the WASAPI host API. Each captures the audio
-    being played through a specific output device.
+    In WASAPI, loopback audio capture is done by opening an InputStream
+    on an OUTPUT device (max_output_channels > 0). This captures whatever
+    audio is being played through that device.
 
     Returns:
-        List of dicts with keys: name, index, channels, is_default
+        List of dicts with keys: name, index, channels
     """
     devices = []
     try:
         wasapi_hostapi_indices = _get_wasapi_hostapi_indices()
 
         for i, dev in enumerate(sd.query_devices()):
-            # Loopback = WASAPI input device with input channels
+            # WASAPI output device = can capture as loopback via InputStream
             if (
                 dev["hostapi"] in wasapi_hostapi_indices
-                and dev["max_input_channels"] > 0
+                and dev["max_output_channels"] > 0
             ):
-                # Check if this is the default WASAPI loopback device
-                is_default = "WASAPI" in dev["name"] and "loopback" in dev["name"].lower()
                 devices.append({
                     "name": dev["name"],
                     "index": i,
-                    "channels": dev["max_input_channels"],
-                    "samplerate": int(dev["default_samplerate"]),
-                    "is_default": bool(dev.get("default_samplerate")),
+                    "channels": dev["max_output_channels"],
                 })
     except Exception as e:
         logger.error(f"Failed to query audio devices: {e}")
         return []
 
-    devices.sort(key=lambda d: (not d["is_default"], d["name"].lower()))
+    devices.sort(key=lambda d: d["name"].lower())
     return devices
 
 
@@ -69,10 +77,10 @@ def _get_wasapi_hostapi_indices() -> list[int]:
 def find_best_device() -> Optional[int]:
     """Auto-detect the best WASAPI loopback device.
 
-    Priority:
-    1. Virtual audio devices (SteelSeries Sonar, Voicemeeter, etc.)
-    2. Default WASAPI loopback device
-    3. Any available WASAPI loopback device
+    Uses a scoring system:
+    - More specific keyword match = higher score (e.g. "gaming" > "sonar")
+    - 8-channel devices (main audio) get bonus points
+    - Fallback to first available device
 
     Returns:
         Device index, or None if nothing suitable found.
@@ -87,23 +95,31 @@ def find_best_device() -> Optional[int]:
     for dev in devices:
         logger.info(f"  [{dev['index']}] {dev['name']}")
 
-    # Priority 1: virtual audio devices (SteelSeries, Voicemeeter etc.)
-    name_lower = ""
+    # Score-based selection
+    best_dev = devices[0]
+    best_score = -1
+
     for dev in devices:
         name_lower = dev["name"].lower()
-        for kw in _VIRTUAL_KEYWORDS:
+        score = 0
+        for i, kw in enumerate(_VIRTUAL_KEYWORDS):
             if kw in name_lower:
-                logger.info(
-                    f"Auto-selected virtual audio device: [{dev['index']}] {dev['name']}"
-                )
-                return dev["index"]
+                score = len(_VIRTUAL_KEYWORDS) - i
+                break
 
-    # Priority 2: default device or first available
-    selected = devices[0]
+        # Bonus for 8-channel devices (main audio, not chat/aux)
+        if score > 0 and dev["channels"] >= 8:
+            score += 100
+
+        if score > best_score:
+            best_score = score
+            best_dev = dev
+
     logger.info(
-        f"Auto-selected default loopback device: [{selected['index']}] {selected['name']}"
+        f"Auto-selected: [{best_dev['index']}] {best_dev['name']}"
+        f"{' (virtual audio)' if best_score > 0 else ''}"
     )
-    return selected["index"]
+    return best_dev["index"]
 
 
 def find_device_by_name(name_substring: str) -> Optional[int]:

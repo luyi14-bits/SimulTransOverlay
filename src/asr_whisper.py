@@ -78,9 +78,11 @@ class WhisperASREngine(BaseASREngine):
             return ""
 
         try:
+            # None = auto-detect language
+            lang_param = None if self.language == "auto" else self.language
             segments, info = self._model.transcribe(
                 audio,
-                language=self.language,
+                language=lang_param,
                 beam_size=5,
                 vad_filter=False,  # VAD already done upstream
             )

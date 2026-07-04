@@ -97,7 +97,7 @@ def get_asr_config(config: Dict[str, Any]) -> Dict[str, Any]:
     return config.get("asr", {
         "engine": "faster-whisper",
         "model": "base",
-        "language": "ja",
+        "language": "auto",
         "device": "auto",
         "compute_type": "auto",
     })
