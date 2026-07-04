@@ -69,6 +69,7 @@ class SimulTransPipeline:
 
         # Audio capture (runs in WASAPI callback thread)
         self.capture = AudioCapture(
+            device_name=audio_cfg.get("device_name") or None,
             mic_enabled=audio_cfg.get("mic_enabled", False),
             mic_ratio=audio_cfg.get("mic_ratio", 0.3),
         )

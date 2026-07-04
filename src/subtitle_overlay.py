@@ -54,6 +54,73 @@ class TranslucentWidget(QWidget):
         painter.drawRoundedRect(self.rect(), 8, 8)
 
 
+class _CloseButtonOverlay(QWidget):
+    """Tiny floating close button that sits over the overlay window.
+
+    This is a SEPARATE window (not transparent to input), so users
+    can click the ✕ to quit even when the main overlay is click-through.
+    """
+
+    def __init__(self, parent_overlay: QMainWindow):
+        super().__init__()
+        self._parent_overlay = parent_overlay
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setFixedSize(32, 32)
+
+        self._hovered = False
+
+    def show(self):
+        """Position above the parent overlay\'s top-right corner."""
+        super().show()
+        self._reposition()
+
+    def _reposition(self):
+        """Move to top-right corner of parent overlay."""
+        if self._parent_overlay:
+            parent_pos = self._parent_overlay.pos()
+            parent_w = self._parent_overlay.width()
+            btn_x = parent_pos.x() + parent_w - self.width() - 4
+            btn_y = parent_pos.y() + 2
+            self.move(btn_x, btn_y)
+
+    def mousePressEvent(self, event):
+        """Click = quit the application."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            QApplication.quit()
+        super().mousePressEvent(event)
+
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Background circle
+        if self._hovered:
+            color = QColor(220, 40, 40, 200)
+        else:
+            color = QColor(180, 30, 30, 120)
+        painter.setBrush(QBrush(color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawEllipse(4, 4, 24, 24)
+
+        # ✕ symbol
+        painter.setPen(QPen(QColor(255, 255, 255, 220), 2))
+        painter.drawLine(12, 12, 20, 20)
+        painter.drawLine(20, 12, 12, 20)
+
+
 class SubtitleOverlay(QMainWindow):
     """Transparent overlay window for displaying subtitles."""
 
@@ -95,7 +162,7 @@ class SubtitleOverlay(QMainWindow):
             y = int(geometry.height() * 0.85)  # 85% from top
             self.move(x, y)
 
-        # Enable click-through (mouse transparent)
+        # Enable click-through (mouse transparent), except for the close button
         if self.click_through:
             self.setWindowFlags(
                 self.windowFlags() | Qt.WindowType.WindowTransparentForInput
@@ -106,9 +173,14 @@ class SubtitleOverlay(QMainWindow):
         central = TranslucentWidget()
         self.setCentralWidget(central)
 
+        # Main layout
         layout = QVBoxLayout(central)
         layout.setContentsMargins(12, 6, 12, 6)
         layout.setSpacing(2)
+
+        # Close button (sits in a tiny frameless window on top of overlay)
+        self._close_btn = _CloseButtonOverlay(self)
+        self._close_btn.show()
 
         # Current subtitle (main line)
         self.current_label = QLabel()

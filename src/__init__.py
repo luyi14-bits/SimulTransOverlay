@@ -1,6 +1,6 @@
 """SimulTransOverlay - 屏幕同传翻译半透明框."""
 
-from .audio_capture import AudioCapture
+from .audio_capture import AudioCapture, list_loopback_devices, find_device_by_name
 from .resample import resample_to_16khz, validate_audio_format
 from .vad_processor import SileroVADProcessor
 from .asr_engine import BaseASREngine, TranscriptionBuffer, create_asr_engine
@@ -14,6 +14,8 @@ from .pipeline import PipelineWorker, PipelineMetrics, BackpressureStrategy, Mem
 
 __all__ = [
     "AudioCapture",
+    "list_loopback_devices",
+    "find_device_by_name",
     "resample_to_16khz",
     "validate_audio_format",
     "SileroVADProcessor",
