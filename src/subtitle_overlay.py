@@ -141,6 +141,40 @@ class SubtitleOverlay(QMainWindow):
         self._setup_window()
         self._setup_ui()
         self.set_theme("dark")
+        self._register_hotkeys()
+
+    def _register_hotkeys(self):
+        """Register global hotkeys (Ctrl+Shift+T / Ctrl+Shift+Q).
+
+        Uses the 'keyboard' library for global hotkeys (work even
+        when overlay is not focused). Callbacks are dispatched to
+        the Qt main thread via QTimer.singleShot.
+        """
+        try:
+            import keyboard
+
+            # Ctrl+Shift+T: toggle visibility
+            keyboard.add_hotkey("ctrl+shift+t", self._hotkey_toggle_cb)
+
+            # Ctrl+Shift+Q: quit
+            keyboard.add_hotkey("ctrl+shift+q", self._hotkey_quit_cb)
+
+            logger.info("Global hotkeys registered: Ctrl+Shift+T (toggle), Ctrl+Shift+Q (quit)")
+        except ImportError:
+            logger.warning("keyboard module not found. Install: pip install keyboard")
+        except Exception as e:
+            logger.error(f"Failed to register hotkeys: {e}")
+
+    def _hotkey_toggle_cb(self):
+        """Dispatch toggle event to main thread."""
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(0, self.toggle_visibility)
+
+    def _hotkey_quit_cb(self):
+        """Dispatch quit event to main thread."""
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(0, QApplication.quit)
+
 
     def _setup_window(self):
         """Configure window properties."""
