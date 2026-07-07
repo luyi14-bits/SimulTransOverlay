@@ -10,6 +10,7 @@ from .model_manager import ModelManager
 from .config_loader import load_config, get_audio_config, get_vad_config, get_asr_config, get_translation_config, get_overlay_config
 from .translator import BuiltinTranslator, TranslationContext, create_translator, _resolve_lang
 from .subtitle_overlay import SubtitleOverlay, OverlayApp, THEMES, TranslucentWidget
+from .control_panel import ControlPanel
 from .pipeline import PipelineWorker, PipelineMetrics, BackpressureStrategy, MemoryMonitor, ModelLifecycleManager
 
 __all__ = [

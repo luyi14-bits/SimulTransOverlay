@@ -358,8 +358,16 @@ class OverlayApp:
         self.tray.show()
 
     def _open_settings(self):
-        """Open settings panel (placeholder)."""
-        logger.info("Settings panel requested")
+        """Open the control panel settings dialog."""
+        try:
+            from src.control_panel import ControlPanel
+            from src.config_loader import load_config
+            config = load_config()
+            dialog = ControlPanel(config=config, parent=self.overlay)
+            dialog.exec()
+            logger.info("Settings dialog closed")
+        except Exception as e:
+            logger.error(f"Failed to open settings: {e}")
 
     def show(self):
         """Show the overlay window."""
